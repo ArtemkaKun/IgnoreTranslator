@@ -4,11 +4,11 @@ import os
 
 fn main() {}
 
-pub fn create_ignore_conf_file(path_to_gitignore_file string) {
+fn create_ignore_conf_file(path_to_gitignore_file string) {
 	os.create(path_to_gitignore_file.replace('.gitignore', 'ignore.conf')) or { panic(err) }
 }
 
-pub fn convert_gitignore_rule_to_ignore_conf_rule(gitignore_rule string) string {
+fn convert_gitignore_rule_to_ignore_conf_rule(gitignore_rule string) string {
 	for char_index, letter in gitignore_rule {
 		if letter.ascii_str() == '[' {
 			mut case_rules_variants := []string{}
