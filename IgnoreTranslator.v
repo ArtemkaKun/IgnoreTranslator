@@ -9,58 +9,76 @@ const (
 	case_construction_length = 4
 )
 
+const (
+	gitignore_file_extension = '.gitignore'
+)
+
 fn main() {
 	mut flag_parser := flag.new_flag_parser(os.args)
+	set_up_flag_parser(mut flag_parser)
 
+	path_to_gitignore := flag_parser.string('path', `p`, '', 'Path to a ,gitignore file that need to be converted').to_lower()
+	handle_unprocessed_flags(mut flag_parser)
+
+	valid, error_message := validate_path_to_gitignore_file(path_to_gitignore)
+
+	if !valid {
+		println(error_message)
+		return
+	}
+
+	generate_ignore_conf_file(path_to_gitignore)
+}
+
+fn set_up_flag_parser(mut flag_parser flag.FlagParser) {
 	flag_parser.application('IgnoreTranslator')
 	flag_parser.version('0.0.1')
 	flag_parser.description('Tool to translate .gitignore files to ignore.conf files')
 	flag_parser.skip_executable()
+}
 
-	path_to_gitignore := flag_parser.string('path', `p`, '', 'Path to a ,gitignore file that need to be converted').to_lower()
-
-	additional_args := flag_parser.finalize() ?
+fn handle_unprocessed_flags(mut flag_parser flag.FlagParser) {
+	additional_args := flag_parser.finalize() or { []string{} }
 
 	if additional_args.len > 0 {
 		println('Unprocessed arguments:\n$additional_args.join_lines()')
 	}
+}
 
-	if path_to_gitignore == '' {
-		println('Path to .gitignore file is not specified')
-		flag_parser.usage()
-		return
-	} else if os.exists(path_to_gitignore) == false {
-		println('File $path_to_gitignore does not exist')
-		return
-	} else if os.is_file(path_to_gitignore) == false {
-		println('$path_to_gitignore is not a file')
-		return
-	} else if os.is_readable(path_to_gitignore) == false {
-		println('File $path_to_gitignore is not readable')
-		return
-	} else if path_to_gitignore.ends_with('.gitignore') == false {
-		println('File $path_to_gitignore is not a .gitignore file')
-		return
-	} else {
-		path_to_ignore_conf := create_ignore_conf_file_path(path_to_gitignore)
-		os.create(path_to_ignore_conf) or { panic(err) }
-
-		gitignore_content := os.read_lines(path_to_gitignore) or { panic(err) }
-		mut ignore_conf_content := []string{}
-
-		for line in gitignore_content {
-			ignore_conf_content << convert_gitignore_rule_to_ignore_conf_rule(line)
-		}
-
-		os.write_file(path_to_ignore_conf, ignore_conf_content.join_lines()) or { panic(err) }
-
-		println('File $path_to_ignore_conf created')
-		return
+fn validate_path_to_gitignore_file(value string) (bool, string) {
+	if value == '' {
+		return false, 'Path to .gitignore file is not specified'
+	} else if os.exists(value) == false {
+		return false, 'File $value does not exist'
+	} else if os.is_file(value) == false {
+		return false, '$value is not a file'
+	} else if os.is_readable(value) == false {
+		return false, 'File $value is not readable'
+	} else if value.ends_with(gitignore_file_extension) == false {
+		return false, 'File $value is not a .gitignore file'
 	}
+
+	return true, ''
+}
+
+fn generate_ignore_conf_file(path_to_gitignore string) {
+	path_to_ignore_conf := create_ignore_conf_file_path(path_to_gitignore)
+	os.create(path_to_ignore_conf) or { panic(err) }
+
+	gitignore_content := os.read_lines(path_to_gitignore) or { panic(err) }
+	mut ignore_conf_content := []string{}
+
+	for line in gitignore_content {
+		ignore_conf_content << convert_gitignore_rule_to_ignore_conf_rule(line)
+	}
+
+	os.write_file(path_to_ignore_conf, ignore_conf_content.join_lines()) or { panic(err) }
+
+	println('File $path_to_ignore_conf created')
 }
 
 fn create_ignore_conf_file_path(path_to_gitignore string) string {
-	return path_to_gitignore.replace('.gitignore', 'ignore.conf')
+	return path_to_gitignore.replace(gitignore_file_extension, 'ignore.conf')
 }
 
 fn convert_gitignore_rule_to_ignore_conf_rule(gitignore_rule string) string {
