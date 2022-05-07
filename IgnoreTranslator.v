@@ -3,9 +3,9 @@ module main
 import os
 
 const (
-	FIRST_CASE_LETTER_SHIFT        = 1
-	SECOND_CASE_LETTERS_SHIFT      = 2
-	CASE_CONSTRUCTION_CHARS_LENGTH = 4
+	first_case_letter_shift  = 1
+	second_case_letter_shift = 2
+	case_construction_length = 4
 )
 
 fn main() {}
@@ -36,10 +36,26 @@ fn try_convert_rule_with_cases(gitignore_rule string) (bool, string) {
 
 fn generate_case_variants_of_rule(gitignore_rule string, char_index int) string {
 	mut case_rules_variants := []string{}
-	case_rules_variants << generate_case(char_index, FIRST_CASE_LETTER_SHIFT, gitignore_rule)
-	case_rules_variants << generate_case(char_index, SECOND_CASE_LETTERS_SHIFT, gitignore_rule)
 
-	return '${case_rules_variants[0]}\n${case_rules_variants[1]}'
+	first_case_variant := generate_case(char_index, first_case_letter_shift, gitignore_rule)
+	mut success, mut result := try_convert_rule_with_cases(first_case_variant)
+
+	if success == true {
+		case_rules_variants << result
+	} else {
+		case_rules_variants << first_case_variant
+	}
+
+	second_case_variant := generate_case(char_index, second_case_letter_shift, gitignore_rule)
+	success, result = try_convert_rule_with_cases(second_case_variant)
+
+	if success == true {
+		case_rules_variants << result
+	} else {
+		case_rules_variants << second_case_variant
+	}
+
+	return case_rules_variants.join('\n')
 }
 
 fn generate_case(original_char_index int, case_char_shift int, gitignore_rule string) string {
@@ -53,7 +69,7 @@ fn generate_case(original_char_index int, case_char_shift int, gitignore_rule st
 
 	case_variant += case_letter
 
-	for char_counter in original_char_index + CASE_CONSTRUCTION_CHARS_LENGTH .. gitignore_rule.len {
+	for char_counter in original_char_index + case_construction_length .. gitignore_rule.len {
 		case_variant += gitignore_rule[char_counter].ascii_str()
 	}
 
