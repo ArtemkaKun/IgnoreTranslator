@@ -40,3 +40,31 @@ fn test_convert_complexs_gitignore_rule_to_ignore_conf_rule() {
 		assert result in splited_expected_result
 	}
 }
+
+fn test_convert_gitignore_exception_rule_to_ignore_conf_rule() {
+	rules := ['!Library', '!/Library', '!Library/', '!/Library/', '![Ll]ibrary', '!/[Ll]ibrary',
+		'![Ll]ibrary/', '!/[Ll]ibrary/']
+	expected_results := ['!Library', '!/Library', '!Library/', '!/Library/', '!Library\n!library',
+		'!/Library\n!/library', '!Library/\n!library/', '!/Library/\n!/library/']
+	mut actual_results := []string{}
+
+	for rule in rules {
+		actual_results << convert_gitignore_rule_to_ignore_conf_rule(rule)
+	}
+
+	assert actual_results == expected_results
+}
+
+fn test_convert_gitignore_comment_rule_to_ignore_conf_rule() {
+	rules := ['#Library', '#/Library', '#Library/', '#/Library/', '#[Ll]ibrary', '#/[Ll]ibrary',
+		'#[Ll]ibrary/', '#/[Ll]ibrary/']
+	expected_results := ['#Library', '#/Library', '#Library/', '#/Library/', '#Library\n#library',
+		'#/Library\n#/library', '#Library/\n#library/', '#/Library/\n#/library/']
+	mut actual_results := []string{}
+
+	for rule in rules {
+		actual_results << convert_gitignore_rule_to_ignore_conf_rule(rule)
+	}
+
+	assert actual_results == expected_results
+}
