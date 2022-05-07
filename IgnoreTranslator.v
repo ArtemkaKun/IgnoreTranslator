@@ -15,13 +15,17 @@ fn create_ignore_conf_file(path_to_gitignore_file string) {
 }
 
 fn convert_gitignore_rule_to_ignore_conf_rule(gitignore_rule string) string {
-	success, result := try_convert_rule_with_cases(gitignore_rule)
+	return get_converted_rule(gitignore_rule)
+}
+
+fn get_converted_rule(rule string) string {
+	success, result := try_convert_rule_with_cases(rule)
 
 	if success == true {
 		return result
 	}
 
-	return gitignore_rule
+	return rule
 }
 
 fn try_convert_rule_with_cases(gitignore_rule string) (bool, string) {
@@ -38,22 +42,10 @@ fn generate_case_variants_of_rule(gitignore_rule string, char_index int) string 
 	mut case_rules_variants := []string{}
 
 	first_case_variant := generate_case(char_index, first_case_letter_shift, gitignore_rule)
-	mut success, mut result := try_convert_rule_with_cases(first_case_variant)
-
-	if success == true {
-		case_rules_variants << result
-	} else {
-		case_rules_variants << first_case_variant
-	}
+	case_rules_variants << get_converted_rule(first_case_variant)
 
 	second_case_variant := generate_case(char_index, second_case_letter_shift, gitignore_rule)
-	success, result = try_convert_rule_with_cases(second_case_variant)
-
-	if success == true {
-		case_rules_variants << result
-	} else {
-		case_rules_variants << second_case_variant
-	}
+	case_rules_variants << get_converted_rule(second_case_variant)
 
 	return case_rules_variants.join('\n')
 }
